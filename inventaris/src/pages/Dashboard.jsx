@@ -1,15 +1,29 @@
-import React from 'react';
-import { Typography, Paper, Box, Grid, Chip } from '@mui/material';
+import React, { useContext } from 'react';
+import { Typography, Paper, Box, Grid, Chip, Button, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { LabStatusContext } from '../providers/LabStatusContext';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import InputIcon from '@mui/icons-material/Input';
 import OutputIcon from '@mui/icons-material/Output';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import { toast } from 'react-toastify';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isLabOpen, toggleLabStatus } = useContext(LabStatusContext);
+
+  const handleToggleLab = () => {
+    toggleLabStatus();
+    if (isLabOpen) {
+      toast.warning('🔒 Lab berhasil DITUTUP!');
+    } else {
+      toast.success('🔓 Lab berhasil DIBUKA!');
+    }
+  };
 
   const cards = [
     { title: 'DATA BARANG', color: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', path: '/barang', icon: <InventoryIcon sx={{ fontSize: 40 }} /> },
@@ -17,14 +31,6 @@ export default function Dashboard() {
     { title: 'BARANG KELUAR', color: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)', path: '/barang-keluar', icon: <OutputIcon sx={{ fontSize: 40 }} /> },
     { title: 'REKAP DATA', color: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)', path: '/rekap', icon: <AssessmentIcon sx={{ fontSize: 40 }} /> },
   ];
-
-  const roleColor = {
-    admin: { bg: '#dbeafe', color: '#1e40af' },
-    operator: { bg: '#fef3c7', color: '#92400e' },
-    viewer: { bg: '#dcfce7', color: '#166534' },
-  };
-
-  const currentRole = roleColor[user?.role] || roleColor.viewer;
 
   return (
     <Box>
@@ -58,6 +64,38 @@ export default function Dashboard() {
           />
         </Box>
       </Paper>
+
+      {/* Indikator Status Lab */}
+      <Alert
+        severity={isLabOpen ? 'success' : 'error'}
+        icon={isLabOpen ? <LockOpenIcon /> : <LockIcon />}
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          fontWeight: 'bold',
+          fontSize: '1rem',
+        }}
+        action={
+          user?.role !== 'viewer' && (
+            <Button
+              color={isLabOpen ? 'error' : 'success'}
+              variant="contained"
+              size="small"
+              onClick={handleToggleLab}
+              startIcon={isLabOpen ? <LockIcon /> : <LockOpenIcon />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 'bold',
+                borderRadius: '8px',
+              }}
+            >
+              {isLabOpen ? 'Tutup Lab' : 'Buka Lab'}
+            </Button>
+          )
+        }
+      >
+        Status Lab: {isLabOpen ? 'TERBUKA - Siap digunakan' : 'DITUTUP - Mahasiswa sudah pulang'}
+      </Alert>
 
       <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>
         Menu Cepat

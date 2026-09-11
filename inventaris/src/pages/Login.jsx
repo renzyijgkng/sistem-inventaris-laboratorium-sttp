@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import AppTextField from '../components/AppTextField';
 import AppButton from '../components/AppButton';
 import api from '../services/api';
+import kampusImg from '../assets/kampus.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -37,15 +38,33 @@ export default function Login() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+        backgroundImage: `url(${kampusImg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.55)',
+          zIndex: 1,
+        },
       }}
     >
       <Paper
         sx={{
           p: 4,
           width: 400,
-          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
           borderRadius: 3,
+          position: 'relative',
+          zIndex: 2,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
         }}
       >
         <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -70,7 +89,6 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="admin@sttp.ac.id"
-            required
           />
           <AppTextField
             label="Password"
@@ -78,7 +96,6 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Masukkan password"
-            required
           />
           <Box sx={{ mt: 3 }}>
             <AppButton type="submit">MASUK</AppButton>
