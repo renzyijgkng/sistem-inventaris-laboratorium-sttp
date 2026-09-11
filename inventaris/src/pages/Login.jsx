@@ -78,7 +78,7 @@ export default function Login() {
             variant="body2"
             sx={{ color: '#666', mt: 0.5, fontStyle: 'italic' }}
           >
-            Aset Laboratorium Komputer STTP
+             Laboratorium Komputer STTP
           </Typography>
         </Box>
 
@@ -88,17 +88,18 @@ export default function Login() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="admin@sttp.ac.id"
+            placeholder="Enter Your Email"
           />
           <AppTextField
             label="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Masukkan password"
+            placeholder="Enter Your Password"
           />
           <Box sx={{ mt: 3 }}>
-            <AppButton type="submit">MASUK</AppButton>
+            <AppButton type="submit">Enter
+            </AppButton>
           </Box>
         </form>
       </Paper>
