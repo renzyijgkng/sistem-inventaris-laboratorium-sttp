@@ -1,102 +1,120 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const app = express();
+const { createClient } = require('@supabase/supabase-js');
 
+const app = express();
 app.use(cors());
 app.use(express.json());
 
-const users = [
-  { email: 'admin@sttp.ac.id', pass: '123', role: 'admin', name: 'Admin Lab' },
-  { email: 'operator@sttp.ac.id', pass: '123', role: 'operator', name: 'Operator Lab' },
-  { email: 'viewer@sttp.ac.id', pass: '123', role: 'viewer', name: 'Viewer Lab' }
-];
+// Koneksi ke Supabase (pakai Service Role Key untuk akses full dari backend)
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-let kategoriData = [
-  { id: 1, nama: 'Komputer' },
-  { id: 2, nama: 'Kabel Jaringan' },
-  { id: 3, nama: 'Pendingin Ruangan' },
-  { id: 4, nama: 'Hardware' }
-];
+// ==================== LOGIN ====================
+app.post('/login', async (req, res) => {
+  try {
+    const email = req.body.email ? req.body.email.trim() : '';
+    const password = req.body.password ? req.body.password.trim() : '';
 
-let barangData = [
-  { id: 1, kategori: 'Komputer', nama: 'Komputer Server', jumlah: 2, satuan: 'unit' },
-  { id: 2, kategori: 'Komputer', nama: 'Komputer Dekstop', jumlah: 10, satuan: 'unit' },
-  { id: 3, kategori: 'Kabel Jaringan', nama: 'Kabel LAN', jumlah: 2, satuan: 'roll' },
-  { id: 4, kategori: 'Pendingin Ruangan', nama: 'AC', jumlah: 3, satuan: 'unit' }
-];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('password', password)
+      .single();
 
-let barangMasukData = [
-  { id: 1, tanggal: '2024-03-22', nama: 'Komputer Server', jumlah: 1, keterangan: 'Kondisi Barang Bagus' },
-  { id: 2, tanggal: '2024-07-08', nama: 'Komputer Dekstop', jumlah: 5, keterangan: 'Kondisi Barang Bagus' }
-];
+    if (error || !data) {
+      return res.status(401).json({ success: false, message: 'Email atau Password Salah!' });
+    }
 
-let barangKeluarData = [
-  { id: 1, tanggal: '2024-01-05', nama: 'Komputer Dekstop', jumlah: 3, keterangan: 'Barang dipinjam' },
-  { id: 2, tanggal: '2024-01-05', nama: 'Keyboard + Mouse', jumlah: 5, keterangan: 'Barang dipinjam' }
-];
-
-app.post('/login', (req, res) => {
-  const email = req.body.email ? req.body.email.trim() : '';
-  const password = req.body.password ? req.body.password.trim() : '';
-  const user = users.find(u => u.email === email && u.pass === password);
-
-  if (user) {
-    return res.status(200).json({ success: true, message: 'Login Berhasil!', user: { email: user.email, role: user.role, name: user.name } });
+    res.status(200).json({
+      success: true,
+      message: 'Login Berhasil!',
+      user: { email: data.email, role: data.role, name: data.name },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-  return res.status(401).json({ success: false, message: 'Email atau Password Salah!' });
 });
 
-app.get('/api/kategori', (req, res) => res.json(kategoriData));
-app.get('/api/barang', (req, res) => res.json(barangData));
-app.get('/api/barang-masuk', (req, res) => res.json(barangMasukData));
-app.get('/api/barang-keluar', (req, res) => res.json(barangKeluarData));
-
-app.post('/api/kategori', (req, res) => {
-  const newItem = { id: Date.now(), ...req.body };
-  kategoriData.push(newItem);
-  res.json(newItem);
+// ==================== KATEGORI ====================
+app.get('/api/kategori', async (req, res) => {
+  const { data, error } = await supabase.from('kategori').select('*').order('id');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-app.put('/api/kategori/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  kategoriData = kategoriData.map(item => item.id === id ? { ...item, ...req.body } : item);
+app.post('/api/kategori', async (req, res) => {
+  const { data, error } = await supabase.from('kategori').insert([{ nama: req.body.nama }]).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+app.put('/api/kategori/:id', async (req, res) => {
+  const { error } = await supabase.from('kategori').update({ nama: req.body.nama }).eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
 
-app.delete('/api/kategori/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  kategoriData = kategoriData.filter(item => item.id !== id);
+app.delete('/api/kategori/:id', async (req, res) => {
+  const { error } = await supabase.from('kategori').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
 
-app.post('/api/barang', (req, res) => {
-  const newItem = { id: Date.now(), ...req.body };
-  barangData.push(newItem);
-  res.json(newItem);
+// ==================== BARANG ====================
+app.get('/api/barang', async (req, res) => {
+  const { data, error } = await supabase.from('barang').select('*').order('id');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-app.put('/api/barang/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  barangData = barangData.map(item => item.id === id ? { ...item, ...req.body } : item);
+app.post('/api/barang', async (req, res) => {
+  const { data, error } = await supabase.from('barang').insert([req.body]).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+app.put('/api/barang/:id', async (req, res) => {
+  const { error } = await supabase.from('barang').update(req.body).eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
 
-app.delete('/api/barang/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  barangData = barangData.filter(item => item.id !== id);
+app.delete('/api/barang/:id', async (req, res) => {
+  const { error } = await supabase.from('barang').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
 
-app.post('/api/barang-masuk', (req, res) => {
-  const newItem = { id: Date.now(), ...req.body };
-  barangMasukData.push(newItem);
-  res.json(newItem);
+// ==================== BARANG MASUK ====================
+app.get('/api/barang-masuk', async (req, res) => {
+  const { data, error } = await supabase.from('barang_masuk').select('*').order('id');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-app.post('/api/barang-keluar', (req, res) => {
-  const newItem = { id: Date.now(), ...req.body };
-  barangKeluarData.push(newItem);
-  res.json(newItem);
+app.post('/api/barang-masuk', async (req, res) => {
+  const { data, error } = await supabase.from('barang_masuk').insert([req.body]).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
 });
 
-app.listen(5000, () => console.log('Backend jalan di http://localhost:5000'));
+// ==================== BARANG KELUAR ====================
+app.get('/api/barang-keluar', async (req, res) => {
+  const { data, error } = await supabase.from('barang_keluar').select('*').order('id');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.post('/api/barang-keluar', async (req, res) => {
+  const { data, error } = await supabase.from('barang_keluar').insert([req.body]).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+// ==================== RUN SERVER ====================
+app.listen(5000, () => console.log('Backend Supabase jalan di http://localhost:5000'));
