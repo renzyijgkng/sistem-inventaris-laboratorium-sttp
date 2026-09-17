@@ -17,7 +17,7 @@ export default function DataBarang() {
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [currentId, setCurrentId] = useState(null);
-  const [form, setForm] = useState({ kategori: '', nama: '', jumlah: '', satuan: '' });
+  const [form, setForm] = useState({ kategori: '', nama: '', jumlah: '', satuan: '', spesifikasi: '' });
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
@@ -33,7 +33,7 @@ export default function DataBarang() {
 
   const handleOpenAdd = () => {
     setIsEdit(false);
-    setForm({ kategori: '', nama: '', jumlah: '', satuan: '' });
+    setForm({ kategori: '', nama: '', jumlah: '', satuan: '', spesifikasi: '' });
     setOpen(true);
   };
 
@@ -125,13 +125,14 @@ export default function DataBarang() {
             <TableCell sx={{ fontWeight: 'bold', color: '#334155' }}>Nama Barang</TableCell>
             <TableCell sx={{ fontWeight: 'bold', color: '#334155' }}>Jumlah</TableCell>
             <TableCell sx={{ fontWeight: 'bold', color: '#334155' }}>Satuan</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', color: '#334155' }}>Spesifikasi</TableCell>
             <TableCell sx={{ fontWeight: 'bold', color: '#334155' }} align="center">Aksi</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {data.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 4, color: '#94a3b8' }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 4, color: '#94a3b8' }}>
                 Belum ada data barang
               </TableCell>
             </TableRow>
@@ -147,8 +148,10 @@ export default function DataBarang() {
                   <Chip label={row.jumlah} size="small" sx={{ backgroundColor: '#dcfce7', color: '#166534', fontWeight: 'bold' }} />
                 </TableCell>
                 <TableCell>{row.satuan}</TableCell>
+                <TableCell sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                  {row.spesifikasi || '-'}
+                </TableCell>
                 <TableCell align="center">
-                  {/* Ikon Mata - Selalu Muncul */}
                   <IconButton
                     size="small"
                     onClick={() => handleOpenDetail(row)}
@@ -157,7 +160,6 @@ export default function DataBarang() {
                     <VisibilityIcon />
                   </IconButton>
 
-                  {/* Ikon Pensil - Hanya Admin & Operator */}
                   {user?.role !== 'viewer' && (
                     <IconButton
                       size="small"
@@ -168,7 +170,6 @@ export default function DataBarang() {
                     </IconButton>
                   )}
 
-                  {/* Ikon Sampah - Hanya Admin */}
                   {user?.role === 'admin' && (
                     <IconButton
                       size="small"
@@ -185,7 +186,6 @@ export default function DataBarang() {
         </TableBody>
       </Table>
 
-      {/* Dialog Tambah/Edit Barang */}
       <Dialog open={open} onClose={() => setOpen(false)} PaperProps={{ sx: { borderRadius: 3, width: 450 } }}>
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b' }}>
           {isEdit ? 'Edit Data Barang' : 'Tambah Data Barang'}
@@ -195,6 +195,7 @@ export default function DataBarang() {
           <AppTextField label="Nama Barang" value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} placeholder="Contoh: Komputer Server" />
           <AppTextField label="Jumlah" type="number" value={form.jumlah} onChange={(e) => setForm({ ...form, jumlah: e.target.value })} placeholder="Contoh: 10" />
           <AppTextField label="Satuan" value={form.satuan} onChange={(e) => setForm({ ...form, satuan: e.target.value })} placeholder="Contoh: unit, roll, pcs" />
+          <AppTextField label="Spesifikasi" value={form.spesifikasi} onChange={(e) => setForm({ ...form, spesifikasi: e.target.value })} placeholder="Contoh: Intel Core i7, RAM 16GB" />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setOpen(false)} sx={{ textTransform: 'none' }}>Batal</Button>
@@ -202,7 +203,6 @@ export default function DataBarang() {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog Lihat Detail Barang (Ikon Mata) */}
       <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} PaperProps={{ sx: { borderRadius: 3, width: 450 } }}>
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b', borderBottom: '2px solid #e2e8f0' }}>
           📋 Detail Barang
@@ -229,6 +229,11 @@ export default function DataBarang() {
                 <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>SATUAN</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1e293b' }}>{detailItem.satuan}</Typography>
               </Box>
+              <Divider />
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>SPESIFIKASI</Typography>
+                <Typography variant="body1" sx={{ color: '#1e293b' }}>{detailItem.spesifikasi || '-'}</Typography>
+              </Box>
             </Box>
           )}
         </DialogContent>
@@ -239,7 +244,6 @@ export default function DataBarang() {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog Konfirmasi Hapus */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} PaperProps={{ sx: { borderRadius: 3, width: 400 } }}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#ef4444', fontWeight: 'bold' }}>
           <WarningAmberIcon /> Konfirmasi Hapus
