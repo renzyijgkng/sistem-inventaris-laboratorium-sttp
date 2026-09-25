@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -12,6 +13,9 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
+
+// Konfigurasi multer untuk upload file (disimpan di memory dulu)
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ==================== LOGIN ====================
 app.post('/login', async (req, res) => {
@@ -114,6 +118,57 @@ app.post('/api/barang-keluar', async (req, res) => {
   const { data, error } = await supabase.from('barang_keluar').insert([req.body]).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
+});
+
+// ==================== REKAP NOMOR SERI (BARU) ====================
+
+// Upload foto ke Supabase Storage
+app.post('/api/upload-foto', upload.single('foto'), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'File tidak ditemukan' });
+
+    const fileName = `${Date.now()}-${file.originalname}`;
+
+    const { data, error } = await supabase.storage
+      .from('foto-nomor-seri')
+      .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    const { data: urlData } = supabase.storage
+      .from('foto-nomor-seri')
+      .getPublicUrl(fileName);
+
+    res.json({ url: urlData.publicUrl });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CRUD Rekap Nomor Seri
+app.get('/api/rekap-nomor-seri', async (req, res) => {
+  const { data, error } = await supabase.from('rekap_nomor_seri').select('*').order('id');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.post('/api/rekap-nomor-seri', async (req, res) => {
+  const { data, error } = await supabase.from('rekap_nomor_seri').insert([req.body]).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+app.put('/api/rekap-nomor-seri/:id', async (req, res) => {
+  const { error } = await supabase.from('rekap_nomor_seri').update(req.body).eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
+app.delete('/api/rekap-nomor-seri/:id', async (req, res) => {
+  const { error } = await supabase.from('rekap_nomor_seri').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
 });
 
 // ==================== RUN SERVER ====================

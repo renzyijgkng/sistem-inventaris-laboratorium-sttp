@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import KategoriBarang from './pages/KategoriBarang';
+import RekapNomorSeri from './pages/RekapNomorSeri';
 import DataBarang from './pages/DataBarang';
 import BarangMasuk from './pages/BarangMasuk';
 import BarangKeluar from './pages/BarangKeluar';
@@ -31,6 +32,7 @@ export default function App() {
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/kategori" element={<KategoriBarang />} />
+              <Route path="/rekap-nomor-seri" element={<RekapNomorSeri />} />
               <Route path="/barang" element={<DataBarang />} />
               <Route path="/barang-masuk" element={<BarangMasuk />} />
               <Route path="/barang-keluar" element={<BarangKeluar />} />

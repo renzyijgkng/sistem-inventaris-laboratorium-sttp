@@ -6,6 +6,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import InputIcon from '@mui/icons-material/Input';
 import OutputIcon from '@mui/icons-material/Output';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -23,6 +24,7 @@ export default function Sidebar() {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Kategori Barang', icon: <CategoryIcon />, path: '/kategori' },
+    { text: 'Rekap Nomor Seri', icon: <FormatListNumberedIcon />, path: '/rekap-nomor-seri' },
     { text: 'Data Barang', icon: <InventoryIcon />, path: '/barang' },
     { text: 'Barang Masuk', icon: <InputIcon />, path: '/barang-masuk' },
     { text: 'Barang Keluar', icon: <OutputIcon />, path: '/barang-keluar' },
