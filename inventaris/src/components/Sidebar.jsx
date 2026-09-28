@@ -24,7 +24,7 @@ export default function Sidebar() {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Kategori Barang', icon: <CategoryIcon />, path: '/kategori' },
-    { text: 'Rekap Nomor Seri', icon: <FormatListNumberedIcon />, path: '/rekap-nomor-seri' },
+    { text: 'Rekap Barang', icon: <FormatListNumberedIcon />, path: '/rekap-nomor-seri' },
     { text: 'Data Barang', icon: <InventoryIcon />, path: '/barang' },
     { text: 'Barang Masuk', icon: <InputIcon />, path: '/barang-masuk' },
     { text: 'Barang Keluar', icon: <OutputIcon />, path: '/barang-keluar' },

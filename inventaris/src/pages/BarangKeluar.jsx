@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Typography, Table, TableBody, TableCell, TableHead, TableRow, Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material';
+import { Paper, Typography, Table, TableBody, TableCell, TableHead, TableRow, Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Grid } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
@@ -95,13 +95,28 @@ export default function BarangKeluar() {
         </TableBody>
       </Table>
 
-      <Dialog open={open} onClose={() => setOpen(false)} PaperProps={{ sx: { borderRadius: 3, width: 450 } }}>
-        <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b' }}>Tambah Barang Keluar</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: '10px !important' }}>
-          <AppTextField label="Tanggal" type="date" InputLabelProps={{ shrink: true }} value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} />
-          <AppTextField label="Nama Barang" value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} placeholder="Contoh: Komputer Dekstop" />
-          <AppTextField label="Jumlah" type="number" value={form.jumlah} onChange={(e) => setForm({ ...form, jumlah: e.target.value })} placeholder="Contoh: 3" />
-          <AppTextField label="Keterangan" value={form.keterangan} onChange={(e) => setForm({ ...form, keterangan: e.target.value })} placeholder="Contoh: Barang dipinjam" />
+      {/* Dialog Tambah - Mode LANDSCAPE */}
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b', borderBottom: '2px solid #e2e8f0' }}>
+          Tambah Barang Keluar
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <AppTextField label="Tanggal" type="date" InputLabelProps={{ shrink: true }} value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} />
+              <AppTextField label="Nama Barang" value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} placeholder="Contoh: Komputer Dekstop" />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <AppTextField label="Jumlah" type="number" value={form.jumlah} onChange={(e) => setForm({ ...form, jumlah: e.target.value })} placeholder="Contoh: 3" />
+              <AppTextField label="Keterangan" value={form.keterangan} onChange={(e) => setForm({ ...form, keterangan: e.target.value })} placeholder="Contoh: Barang dipinjam" />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setOpen(false)} sx={{ textTransform: 'none' }}>Batal</Button>

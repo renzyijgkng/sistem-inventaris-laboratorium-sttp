@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Typography, Table, TableBody, TableCell, TableHead, TableRow, IconButton, Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Divider } from '@mui/material';
+import { Paper, Typography, Table, TableBody, TableCell, TableHead, TableRow, IconButton, Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Grid } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -186,6 +186,7 @@ export default function DataBarang() {
         </TableBody>
       </Table>
 
+      {/* Dialog Tambah/Edit */}
       <Dialog open={open} onClose={() => setOpen(false)} PaperProps={{ sx: { borderRadius: 3, width: 450 } }}>
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b' }}>
           {isEdit ? 'Edit Data Barang' : 'Tambah Data Barang'}
@@ -203,38 +204,45 @@ export default function DataBarang() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} PaperProps={{ sx: { borderRadius: 3, width: 450 } }}>
+      {/* Dialog Detail Barang - Mode LANDSCAPE */}
+      <Dialog
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b', borderBottom: '2px solid #e2e8f0' }}>
           📋 Detail Barang
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
           {detailItem && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KATEGORI</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1e40af' }}>{detailItem.kategori}</Typography>
-              </Box>
-              <Divider />
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>NAMA BARANG</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1e293b' }}>{detailItem.nama}</Typography>
-              </Box>
-              <Divider />
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>JUMLAH</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#166534' }}>{detailItem.jumlah} {detailItem.satuan}</Typography>
-              </Box>
-              <Divider />
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>SATUAN</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1e293b' }}>{detailItem.satuan}</Typography>
-              </Box>
-              <Divider />
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>SPESIFIKASI</Typography>
-                <Typography variant="body1" sx={{ color: '#1e293b' }}>{detailItem.spesifikasi || '-'}</Typography>
-              </Box>
-            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 2, mb: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KATEGORI</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1e40af' }}>{detailItem.kategori}</Typography>
+                </Box>
+                <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>NAMA BARANG</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1e293b' }}>{detailItem.nama}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 2, mb: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>JUMLAH</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#166534' }}>{detailItem.jumlah} {detailItem.satuan}</Typography>
+                </Box>
+                <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 2, mb: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>SATUAN</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1e293b' }}>{detailItem.satuan}</Typography>
+                </Box>
+                <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>SPESIFIKASI</Typography>
+                  <Typography variant="body1" sx={{ color: '#1e293b' }}>{detailItem.spesifikasi || '-'}</Typography>
+                </Box>
+              </Grid>
+            </Grid>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
@@ -244,6 +252,7 @@ export default function DataBarang() {
         </DialogActions>
       </Dialog>
 
+      {/* Dialog Konfirmasi Hapus */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} PaperProps={{ sx: { borderRadius: 3, width: 400 } }}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#ef4444', fontWeight: 'bold' }}>
           <WarningAmberIcon /> Konfirmasi Hapus
