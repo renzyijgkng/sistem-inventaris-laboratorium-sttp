@@ -78,7 +78,7 @@ export default function Login() {
             variant="body2"
             sx={{ color: '#666', mt: 0.5, fontStyle: 'italic' }}
           >
-             Laboratorium Komputer STTP
+            Laboratorium Komputer STTP
           </Typography>
         </Box>
 
@@ -98,8 +98,7 @@ export default function Login() {
             placeholder="Enter Your Password"
           />
           <Box sx={{ mt: 3 }}>
-            <AppButton type="submit">Enter
-            </AppButton>
+            <AppButton type="submit">Enter</AppButton>
           </Box>
         </form>
       </Paper>
