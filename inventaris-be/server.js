@@ -185,7 +185,7 @@ app.get('/api/aset', async (req, res) => {
     .from('aset')
     .select(`
       *,
-      laboratorium:kode_lab_id(nama_lab, kode_lab),
+      laboratorium:laboratorium_id(nama_lab, kode_lab),
       kategori:kategori_id(nama_kategori),
       merk:merk_id(nama_merk),
       kondisi:kondisi_id(nama_kondisi),
@@ -364,7 +364,7 @@ app.get('/api/dashboard/komputer-per-lab', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('aset')
-      .select('laboratorium_id, laboratorium:kode_lab_id(nama_lab), kategori_id');
+      .select('laboratorium_id, laboratorium:laboratorium_id(nama_lab), kategori_id');
     if (error) return res.status(500).json({ error: error.message });
 
     const grouped = {};
@@ -429,7 +429,7 @@ app.get('/api/dashboard/inventaris-terbaru', async (req, res) => {
       .from('aset')
       .select(`
         id, kode_aset, nama_aset,
-        laboratorium:kode_lab_id(nama_lab),
+        laboratorium:laboratorium_id(nama_lab),
         kondisi:kondisi_id(nama_kondisi)
       `)
       .order('id', { ascending: false })
