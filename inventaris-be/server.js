@@ -179,9 +179,11 @@ app.get('/api/status-aset', async (req, res) => {
   res.json(data);
 });
 
-// ==================== ASET ====================
+// ==================== ASET (dengan filter query) ====================
 app.get('/api/aset', async (req, res) => {
-  const { data, error } = await supabase
+  const { laboratorium_id, kategori_id, kondisi_id, status_id } = req.query;
+
+  let query = supabase
     .from('aset')
     .select(`
       *,
@@ -192,6 +194,13 @@ app.get('/api/aset', async (req, res) => {
       status:status_id(nama_status)
     `)
     .order('id');
+
+  if (laboratorium_id) query = query.eq('laboratorium_id', laboratorium_id);
+  if (kategori_id) query = query.eq('kategori_id', kategori_id);
+  if (kondisi_id) query = query.eq('kondisi_id', kondisi_id);
+  if (status_id) query = query.eq('status_id', status_id);
+
+  const { data, error } = await query;
   if (error) {
     const { data: fallback, error: err2 } = await supabase.from('aset').select('*').order('id');
     if (err2) return res.status(500).json({ error: err2.message });
@@ -444,6 +453,62 @@ app.get('/api/dashboard/inventaris-terbaru', async (req, res) => {
       return res.json(fallback || []);
     }
     res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==================== LAPORAN ====================
+app.get('/api/laporan', async (req, res) => {
+  const { jenis, laboratorium_id, tanggal_awal, tanggal_akhir } = req.query;
+
+  try {
+    let data = [];
+
+    if (jenis === 'inventaris' || jenis === 'kondisi' || !jenis) {
+      let query = supabase
+        .from('aset')
+        .select(`
+          *,
+          laboratorium:laboratorium_id(nama_lab, kode_lab),
+          kategori:kategori_id(nama_kategori),
+          merk:merk_id(nama_merk),
+          kondisi:kondisi_id(nama_kondisi),
+          status:status_id(nama_status)
+        `)
+        .order('id');
+
+      if (laboratorium_id) query = query.eq('laboratorium_id', laboratorium_id);
+      const result = await query;
+      if (result.error) return res.status(500).json({ error: result.error.message });
+      data = result.data;
+    } else if (jenis === 'maintenance') {
+      const result = await supabase.from('maintenance').select('*').order('id');
+      if (result.error) return res.status(500).json({ error: result.error.message });
+      data = result.data;
+    } else if (jenis === 'mutasi') {
+      const result = await supabase.from('mutasi_aset').select('*').order('id');
+      if (result.error) return res.status(500).json({ error: result.error.message });
+      data = result.data;
+    } else if (jenis === 'pengaduan') {
+      const result = await supabase.from('pengaduan').select('*').order('id');
+      if (result.error) return res.status(500).json({ error: result.error.message });
+      data = result.data;
+    }
+
+    // Filter tanggal jika ada
+    if (tanggal_awal && tanggal_akhir && data.length > 0) {
+      const start = new Date(tanggal_awal);
+      const end = new Date(tanggal_akhir);
+      data = data.filter((item) => {
+        const tgl = item.created_at || item.tanggal;
+        if (!tgl) return true;
+        const d = new Date(tgl);
+        return d >= start && d <= end;
+      });
+    }
+
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -40,7 +40,7 @@ export default function Inventaris() {
   const [isEdit, setIsEdit] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [form, setForm] = useState({
-    kode_aset: '', nama_aset: '', kode_lab_id: '', kategori_id: '', merk_id: '',
+    kode_aset: '', nama_aset: '', laboratorium_id: '', kategori_id: '', merk_id: '',
     kondisi_id: '', status_id: '', nomor_seri: '', jumlah: 1, satuan: 'unit', keterangan: '',
   });
 
@@ -61,10 +61,10 @@ export default function Inventaris() {
   }, []);
 
   const filtered = data.filter((item) => {
-    const matchSearch = !search || 
+    const matchSearch = !search ||
       item.nama_aset?.toLowerCase().includes(search.toLowerCase()) ||
       item.kode_aset?.toLowerCase().includes(search.toLowerCase());
-    const matchLab = !filterLab || String(item.kode_lab_id) === String(filterLab);
+    const matchLab = !filterLab || String(item.laboratorium_id) === String(filterLab);
     const matchKategori = !filterKategori || String(item.kategori_id) === String(filterKategori);
     const matchKondisi = !filterKondisi || String(item.kondisi_id) === String(filterKondisi);
     const matchStatus = !filterStatus || String(item.status_id) === String(filterStatus);
@@ -82,7 +82,7 @@ export default function Inventaris() {
   const handleOpenAdd = () => {
     setIsEdit(false);
     setForm({
-      kode_aset: '', nama_aset: '', kode_lab_id: '', kategori_id: '', merk_id: '',
+      kode_aset: '', nama_aset: '', laboratorium_id: '', kategori_id: '', merk_id: '',
       kondisi_id: '', status_id: '', nomor_seri: '', jumlah: 1, satuan: 'unit', keterangan: '',
     });
     setOpen(true);
@@ -94,7 +94,7 @@ export default function Inventaris() {
     setForm({
       kode_aset: item.kode_aset || '',
       nama_aset: item.nama_aset || '',
-      kode_lab_id: item.kode_lab_id || '',
+      laboratorium_id: item.laboratorium_id || '',
       kategori_id: item.kategori_id || '',
       merk_id: item.merk_id || '',
       kondisi_id: item.kondisi_id || '',
@@ -312,7 +312,7 @@ export default function Inventaris() {
             <AppTextField label="Nama Aset" value={form.nama_aset} onChange={(e) => setForm({ ...form, nama_aset: e.target.value })} placeholder="Contoh: PC Lab 01" />
             <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
               <InputLabel>Lab</InputLabel>
-              <Select value={form.kode_lab_id} onChange={(e) => setForm({ ...form, kode_lab_id: e.target.value })} label="Lab">
+              <Select value={form.laboratorium_id} onChange={(e) => setForm({ ...form, laboratorium_id: e.target.value })} label="Lab">
                 <MenuItem value="">-- Pilih Lab --</MenuItem>
                 {labList.map((l) => (
                   <MenuItem key={l.id} value={l.id}>{l.nama_lab}</MenuItem>

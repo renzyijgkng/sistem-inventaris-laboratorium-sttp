@@ -10,17 +10,28 @@ export default function DetailLab() {
   const navigate = useNavigate();
   const [lab, setLab] = useState(null);
   const [aset, setAset] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/api/laboratorium').then((res) => {
-      const found = res.data.find((l) => String(l.id) === String(id));
-      setLab(found);
-    }).catch(() => {});
+    // Ambil info lab
+    api.get('/api/laboratorium')
+      .then((res) => {
+        const found = res.data.find((l) => String(l.id) === String(id));
+        setLab(found);
+      })
+      .catch(() => {});
 
-    api.get('/api/aset').then((res) => {
-      const filtered = res.data.filter((a) => String(a.kode_lab_id) === String(id));
-      setAset(filtered);
-    }).catch(() => {});
+    // Ambil aset berdasarkan laboratorium_id (via query parameter)
+    api.get(`/api/aset?laboratorium_id=${id}`)
+      .then((res) => {
+        setAset(res.data || []);
+      })
+      .catch(() => {
+        setAset([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [id]);
 
   if (!lab) {
@@ -96,7 +107,13 @@ export default function DetailLab() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {aset.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 4, color: '#94a3b8' }}>
+                  Memuat data...
+                </TableCell>
+              </TableRow>
+            ) : aset.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} align="center" sx={{ py: 4, color: '#94a3b8' }}>
                   Belum ada data komputer di lab ini

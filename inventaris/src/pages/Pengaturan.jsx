@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Paper, Typography, Box, Tabs, Tab, Button, Grid,
+  Paper, Typography, Box, Tabs, Tab, Button, Grid, Switch, FormControlLabel,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import UploadIcon from '@mui/icons-material/Upload';
@@ -12,13 +12,21 @@ import api from '../services/api';
 export default function Pengaturan() {
   const [tab, setTab] = useState(0);
   const [settings, setSettings] = useState({
-    id: null, nama_kampus: '', alamat: '', email: '', logo_url: '',
+    id: null,
+    nama_kampus: '',
+    alamat: '',
+    email: '',
+    logo_url: '',
+    nama_sistem: 'Sistem Inventaris Laboratorium',
+    versi: '1.0.0',
+    mode_maintenance: false,
+    developer: 'Fiqria Rangga',
   });
   const [activityLogs, setActivityLogs] = useState([]);
 
   useEffect(() => {
     api.get('/api/settings').then((res) => {
-      if (res.data && res.data.id) setSettings(res.data);
+      if (res.data && res.data.id) setSettings((prev) => ({ ...prev, ...res.data }));
     }).catch(() => {});
 
     api.get('/api/activity-logs').then((res) => setActivityLogs(res.data)).catch(() => {});
@@ -60,6 +68,7 @@ export default function Pengaturan() {
         </Tabs>
 
         <Box sx={{ p: 3 }}>
+          {/* TAB IDENTITAS */}
           {tab === 0 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>
@@ -70,7 +79,7 @@ export default function Pengaturan() {
                 <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
                   Logo Kampus
                 </Typography>
-                <Box sx={{ mt: 1 }}>
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
                   {settings.logo_url ? (
                     <img
                       src={settings.logo_url}
@@ -94,7 +103,7 @@ export default function Pengaturan() {
                     variant="outlined"
                     component="label"
                     startIcon={<UploadIcon />}
-                    sx={{ ml: 2, textTransform: 'none', borderRadius: '10px' }}
+                    sx={{ textTransform: 'none', borderRadius: '10px' }}
                   >
                     Upload Logo
                     <input
@@ -160,17 +169,70 @@ export default function Pengaturan() {
             </Box>
           )}
 
+          {/* TAB SISTEM */}
           {tab === 1 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>
                 Pengaturan Sistem
               </Typography>
-              <Typography variant="body2" sx={{ color: '#64748b' }}>
-                Fitur pengaturan sistem akan dikembangkan lebih lanjut.
-              </Typography>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <AppTextField
+                    label="Nama Sistem"
+                    value={settings.nama_sistem || ''}
+                    onChange={(e) => setSettings({ ...settings, nama_sistem: e.target.value })}
+                    placeholder="Contoh: Sistem Inventaris Laboratorium"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <AppTextField
+                    label="Versi Aplikasi"
+                    value={settings.versi || ''}
+                    onChange={(e) => setSettings({ ...settings, versi: e.target.value })}
+                    placeholder="Contoh: 1.0.0"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <AppTextField
+                    label="Developer"
+                    value={settings.developer || ''}
+                    onChange={(e) => setSettings({ ...settings, developer: e.target.value })}
+                    placeholder="Nama developer"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mt: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={settings.mode_maintenance || false}
+                          onChange={(e) => setSettings({ ...settings, mode_maintenance: e.target.checked })}
+                          color="warning"
+                        />
+                      }
+                      label="Mode Maintenance"
+                    />
+                    <Typography variant="caption" sx={{ color: '#64748b', display: 'block', ml: 5 }}>
+                      Jika aktif, sistem dalam perbaikan.
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              <Box sx={{ mt: 3 }}>
+                <AppButton
+                  startIcon={<SaveIcon />}
+                  onClick={handleSaveSettings}
+                  sx={{ width: 'auto', px: 4 }}
+                >
+                  Simpan Pengaturan Sistem
+                </AppButton>
+              </Box>
             </Box>
           )}
 
+          {/* TAB ACTIVITY LOG */}
           {tab === 2 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>

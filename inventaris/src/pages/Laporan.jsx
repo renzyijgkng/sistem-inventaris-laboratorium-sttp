@@ -27,21 +27,15 @@ export default function Laporan() {
   const handleTampilkan = async () => {
     setLoading(true);
     try {
-      let endpoint = '/api/aset';
-      if (jenis === 'kondisi') endpoint = '/api/aset';
-      else if (jenis === 'maintenance') endpoint = '/api/maintenance';
-      else if (jenis === 'mutasi') endpoint = '/api/mutasi-aset';
-      else if (jenis === 'pengaduan') endpoint = '/api/pengaduan';
+      const params = new URLSearchParams();
+      params.append('jenis', jenis);
+      if (labId) params.append('laboratorium_id', labId);
+      if (periodeAwal) params.append('tanggal_awal', periodeAwal);
+      if (periodeAkhir) params.append('tanggal_akhir', periodeAkhir);
 
-      const res = await api.get(endpoint);
-      let filtered = res.data;
-
-      if (labId && (jenis === 'inventaris' || jenis === 'kondisi')) {
-        filtered = filtered.filter((item) => String(item.kode_lab_id) === String(labId));
-      }
-
-      setHasil(filtered);
-      toast.success(`Berhasil memuat ${filtered.length} data`);
+      const res = await api.get(`/api/laporan?${params.toString()}`);
+      setHasil(res.data || []);
+      toast.success(`Berhasil memuat ${res.data?.length || 0} data`);
     } catch (err) {
       toast.error('Gagal memuat data');
     } finally {
@@ -62,20 +56,10 @@ export default function Laporan() {
       toast.warning('Tidak ada data untuk diexport');
       return;
     }
-    let csv = '';
-    if (jenis === 'inventaris' || jenis === 'kondisi') {
-      csv = 'Kode,Nama Aset,Lab,Kategori,Kondisi\n' +
-        hasil.map((d) => `${d.kode_aset},${d.nama_aset},${d.laboratorium?.nama_lab || '-'},${d.kategori?.nama_kategori || '-'},${d.kondisi?.nama_kondisi || '-'}`).join('\n');
-    } else if (jenis === 'maintenance') {
-      csv = 'Tanggal,Jenis,Teknisi,Status\n' +
-        hasil.map((d) => `${d.tanggal},${d.jenis_maintenance},${d.teknisi},${d.status}`).join('\n');
-    } else if (jenis === 'mutasi') {
-      csv = 'Tanggal,Dari Lab,Ke Lab,Keterangan\n' +
-        hasil.map((d) => `${d.tanggal},${d.dari_lab},${d.ke_lab},${d.keterangan}`).join('\n');
-    } else {
-      csv = 'Tanggal,Judul,Deskripsi,Status\n' +
-        hasil.map((d) => `${d.tanggal},${d.judul},${d.deskripsi},${d.status}`).join('\n');
-    }
+    const csv = 'Kode,Nama Aset,Lab,Kategori,Kondisi,Status\n' +
+      hasil.map((d) =>
+        `${d.kode_aset},${d.nama_aset},${d.laboratorium?.nama_lab || '-'},${d.kategori?.nama_kategori || '-'},${d.kondisi?.nama_kondisi || '-'},${d.status?.nama_status || '-'}`
+      ).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -86,6 +70,10 @@ export default function Laporan() {
   };
 
   const handleExportPDF = () => {
+    if (hasil.length === 0) {
+      toast.warning('Tidak ada data untuk dicetak');
+      return;
+    }
     window.print();
     toast.info('Gunakan "Save as PDF" di dialog print.');
   };
@@ -94,76 +82,6 @@ export default function Laporan() {
     if (nama === 'Baik') return { bg: '#dcfce7', color: '#166534' };
     if (nama === 'Rusak Ringan') return { bg: '#fef3c7', color: '#92400e' };
     return { bg: '#fee2e2', color: '#991b1b' };
-  };
-
-  const renderTable = () => {
-    if (hasil.length === 0) {
-      return (
-        <TableRow>
-          <TableCell colSpan={6} align="center" sx={{ py: 4, color: '#94a3b8' }}>
-            Belum ada data. Klik "Tampilkan" untuk memuat laporan.
-          </TableCell>
-        </TableRow>
-      );
-    }
-
-    if (jenis === 'inventaris' || jenis === 'kondisi') {
-      return hasil.map((item) => {
-        const kColor = getKondisiColor(item.kondisi?.nama_kondisi);
-        return (
-          <TableRow key={item.id} hover>
-            <TableCell sx={{ fontWeight: 600 }}>{item.kode_aset}</TableCell>
-            <TableCell>{item.nama_aset}</TableCell>
-            <TableCell>{item.laboratorium?.nama_lab || '-'}</TableCell>
-            <TableCell>{item.kategori?.nama_kategori || '-'}</TableCell>
-            <TableCell>
-              <Chip label={item.kondisi?.nama_kondisi || '-'} size="small" sx={{ backgroundColor: kColor.bg, color: kColor.color, fontWeight: 'bold' }} />
-            </TableCell>
-            <TableCell>{item.status?.nama_status || '-'}</TableCell>
-          </TableRow>
-        );
-      });
-    }
-
-    if (jenis === 'maintenance') {
-      return hasil.map((item) => (
-        <TableRow key={item.id} hover>
-          <TableCell>{item.tanggal}</TableCell>
-          <TableCell>{item.jenis_maintenance}</TableCell>
-          <TableCell>{item.teknisi}</TableCell>
-          <TableCell>{item.keterangan || '-'}</TableCell>
-          <TableCell>
-            <Chip label={item.status} size="small" sx={{ backgroundColor: '#dcfce7', color: '#166534', fontWeight: 'bold' }} />
-          </TableCell>
-          <TableCell>-</TableCell>
-        </TableRow>
-      ));
-    }
-
-    if (jenis === 'mutasi') {
-      return hasil.map((item) => (
-        <TableRow key={item.id} hover>
-          <TableCell>{item.tanggal}</TableCell>
-          <TableCell>Dari Lab ID: {item.dari_lab || '-'}</TableCell>
-          <TableCell>Ke Lab ID: {item.ke_lab || '-'}</TableCell>
-          <TableCell>{item.keterangan || '-'}</TableCell>
-          <TableCell>-</TableCell>
-          <TableCell>-</TableCell>
-        </TableRow>
-      ));
-    }
-
-    return hasil.map((item) => (
-      <TableRow key={item.id} hover>
-        <TableCell>{item.tanggal}</TableCell>
-        <TableCell>{item.judul}</TableCell>
-        <TableCell colSpan={2}>{item.deskripsi}</TableCell>
-        <TableCell>
-          <Chip label={item.status} size="small" sx={{ backgroundColor: '#dbeafe', color: '#1e40af', fontWeight: 'bold' }} />
-        </TableCell>
-        <TableCell>-</TableCell>
-      </TableRow>
-    ));
   };
 
   return (
@@ -295,16 +213,38 @@ export default function Laporan() {
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f1f5f9' }}>
-              <TableCell sx={{ fontWeight: 'bold' }}>Kode / Tanggal</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Nama / Jenis</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Lab / Teknisi</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Kategori / Ket</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Kondisi / Status</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Kode</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Nama Aset</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Lab</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Kategori</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Kondisi</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {renderTable()}
+            {hasil.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4, color: '#94a3b8' }}>
+                  Belum ada data. Klik "Tampilkan" untuk memuat laporan.
+                </TableCell>
+              </TableRow>
+            ) : (
+              hasil.map((item) => {
+                const kColor = getKondisiColor(item.kondisi?.nama_kondisi);
+                return (
+                  <TableRow key={item.id} hover>
+                    <TableCell sx={{ fontWeight: 600 }}>{item.kode_aset}</TableCell>
+                    <TableCell>{item.nama_aset}</TableCell>
+                    <TableCell>{item.laboratorium?.nama_lab || '-'}</TableCell>
+                    <TableCell>{item.kategori?.nama_kategori || '-'}</TableCell>
+                    <TableCell>
+                      <Chip label={item.kondisi?.nama_kondisi || '-'} size="small" sx={{ backgroundColor: kColor.bg, color: kColor.color, fontWeight: 'bold' }} />
+                    </TableCell>
+                    <TableCell>{item.status?.nama_status || '-'}</TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </Paper>
