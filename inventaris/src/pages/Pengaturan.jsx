@@ -61,14 +61,19 @@ export default function Pengaturan() {
       </Box>
 
       <Paper sx={{ borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-        <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: '1px solid #e2e8f0', px: 2 }}>
-          <Tab label="Identitas" sx={{ textTransform: 'none' }} />
-          <Tab label="Sistem" sx={{ textTransform: 'none' }} />
-          <Tab label="Activity Log" sx={{ textTransform: 'none' }} />
+        <Tabs
+          value={tab}
+          onChange={(e, v) => setTab(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ borderBottom: '1px solid #e2e8f0', px: 2, minHeight: 44 }}
+        >
+          <Tab label="Identitas" sx={{ textTransform: 'none', fontSize: '0.85rem', minWidth: 90, minHeight: 44 }} />
+          <Tab label="Sistem" sx={{ textTransform: 'none', fontSize: '0.85rem', minWidth: 90, minHeight: 44 }} />
+          <Tab label="Activity Log" sx={{ textTransform: 'none', fontSize: '0.85rem', minWidth: 110, minHeight: 44 }} />
         </Tabs>
 
         <Box sx={{ p: 3 }}>
-          {/* TAB IDENTITAS */}
           {tab === 0 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>
@@ -169,7 +174,6 @@ export default function Pengaturan() {
             </Box>
           )}
 
-          {/* TAB SISTEM */}
           {tab === 1 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>
@@ -232,7 +236,6 @@ export default function Pengaturan() {
             </Box>
           )}
 
-          {/* TAB ACTIVITY LOG */}
           {tab === 2 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>

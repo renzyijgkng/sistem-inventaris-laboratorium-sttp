@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Paper, Typography, Box, Chip, Button, Grid, Tabs, Tab, Divider,
+  Paper, Typography, Box, Chip, Button, Grid, Tabs, Tab,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  MenuItem, Select, FormControl, InputLabel,
+  MenuItem, Select, FormControl, InputLabel, CircularProgress,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
+import UploadIcon from '@mui/icons-material/Upload';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
@@ -19,13 +20,12 @@ export default function DetailAset() {
   const [mutasi, setMutasi] = useState([]);
   const [pengaduan, setPengaduan] = useState([]);
   const [tab, setTab] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
-  // Dialog states
   const [openMaint, setOpenMaint] = useState(false);
   const [openMutasi, setOpenMutasi] = useState(false);
   const [openPengaduan, setOpenPengaduan] = useState(false);
 
-  // Form states
   const [formMaint, setFormMaint] = useState({ tanggal: '', jenis_maintenance: '', teknisi: '', keterangan: '', status: 'Selesai' });
   const [formMutasi, setFormMutasi] = useState({ tanggal: '', dari_lab: '', ke_lab: '', keterangan: '' });
   const [formPengaduan, setFormPengaduan] = useState({ tanggal: '', judul: '', deskripsi: '', status: 'Open' });
@@ -37,21 +37,33 @@ export default function DetailAset() {
     }).catch(() => {});
 
     api.get(`/api/spesifikasi-komputer/${id}`).then((res) => setSpesifikasi(res.data)).catch(() => {});
-
-    api.get('/api/maintenance').then((res) => {
-      setMaintenance(res.data.filter((m) => String(m.aset_id) === String(id)));
-    }).catch(() => {});
-
-    api.get('/api/mutasi-aset').then((res) => {
-      setMutasi(res.data.filter((m) => String(m.aset_id) === String(id)));
-    }).catch(() => {});
-
-    api.get('/api/pengaduan').then((res) => {
-      setPengaduan(res.data.filter((p) => String(p.aset_id) === String(id)));
-    }).catch(() => {});
+    api.get('/api/maintenance').then((res) => setMaintenance(res.data.filter((m) => String(m.aset_id) === String(id)))).catch(() => {});
+    api.get('/api/mutasi-aset').then((res) => setMutasi(res.data.filter((m) => String(m.aset_id) === String(id)))).catch(() => {});
+    api.get('/api/pengaduan').then((res) => setPengaduan(res.data.filter((p) => String(p.aset_id) === String(id)))).catch(() => {});
   };
 
   useEffect(() => { fetchAll(); }, [id]);
+
+  const handleUploadFoto = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('foto', file);
+      const uploadRes = await api.post('/api/upload-foto', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const url = uploadRes.data.url;
+      await api.put(`/api/aset/${id}/foto`, { foto_uri: url });
+      toast.success('Foto berhasil diupload!');
+      fetchAll();
+    } catch (err) {
+      toast.error('Gagal upload foto!');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSaveMaint = async () => {
     if (!formMaint.tanggal || !formMaint.jenis_maintenance) {
@@ -122,11 +134,26 @@ export default function DetailAset() {
           <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', height: '100%' }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>Informasi Aset</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KODE</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1e293b' }}>{aset.kode_aset}</Typography></Box>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>NAMA</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.nama_aset}</Typography></Box>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KATEGORI</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.kategori?.nama_kategori || '-'}</Typography></Box>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>MERK</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.merk?.nama_merk || '-'}</Typography></Box>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>NOMOR SERI</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.nomor_seri || '-'}</Typography></Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KODE</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1e293b' }}>{aset.kode_aset}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>NAMA</Typography>
+                <Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.nama_aset}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KATEGORI</Typography>
+                <Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.kategori?.nama_kategori || '-'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>MERK</Typography>
+                <Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.merk?.nama_merk || '-'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>NOMOR SERI</Typography>
+                <Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.nomor_seri || '-'}</Typography>
+              </Box>
             </Box>
           </Paper>
         </Grid>
@@ -135,10 +162,24 @@ export default function DetailAset() {
           <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', height: '100%' }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>Status</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KONDISI</Typography><Box sx={{ mt: 0.5 }}><Chip label={aset.kondisi?.nama_kondisi || '-'} size="small" sx={{ backgroundColor: kColor.bg, color: kColor.color, fontWeight: 'bold' }} /></Box></Box>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>STATUS</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.status?.nama_status || '-'}</Typography></Box>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>LAB</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.laboratorium?.nama_lab || '-'}</Typography></Box>
-              <Box><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>RUANGAN</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.ruangan?.nama_ruangan || '-'}</Typography></Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>KONDISI</Typography>
+                <Box sx={{ mt: 0.5 }}>
+                  <Chip label={aset.kondisi?.nama_kondisi || '-'} size="small" sx={{ backgroundColor: kColor.bg, color: kColor.color, fontWeight: 'bold' }} />
+                </Box>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>STATUS</Typography>
+                <Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.status?.nama_status || '-'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>LAB</Typography>
+                <Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.laboratorium?.nama_lab || '-'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>RUANGAN</Typography>
+                <Typography variant="body2" sx={{ color: '#1e293b' }}>{aset.ruangan?.nama_ruangan || '-'}</Typography>
+              </Box>
             </Box>
           </Paper>
         </Grid>
@@ -147,11 +188,46 @@ export default function DetailAset() {
       <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', mb: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>Spesifikasi Komputer</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>PROCESSOR</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.processor || '-'}</Typography></Grid>
-          <Grid item xs={12} sm={6} md={3}><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>RAM</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.ram || '-'}</Typography></Grid>
-          <Grid item xs={12} sm={6} md={3}><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>STORAGE</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.storage || '-'}</Typography></Grid>
-          <Grid item xs={12} sm={6} md={3}><Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>VGA</Typography><Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.vga || '-'}</Typography></Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>PROCESSOR</Typography>
+            <Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.processor || '-'}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>RAM</Typography>
+            <Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.ram || '-'}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>STORAGE</Typography>
+            <Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.storage || '-'}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>VGA</Typography>
+            <Typography variant="body2" sx={{ color: '#1e293b' }}>{spesifikasi?.vga || '-'}</Typography>
+          </Grid>
         </Grid>
+      </Paper>
+
+      <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', mb: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#1e293b' }}>Foto Nomor Seri</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          {aset.foto_uri ? (
+            <img src={aset.foto_uri} alt="Foto Aset" style={{ width: 200, borderRadius: 8, border: '1px solid #cbd5e1' }} />
+          ) : (
+            <Box sx={{ width: 200, height: 150, backgroundColor: '#f1f5f9', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #cbd5e1' }}>
+              <Typography variant="caption" sx={{ color: '#94a3b8' }}>BELUM ADA FOTO</Typography>
+            </Box>
+          )}
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={uploading ? <CircularProgress size={16} /> : <UploadIcon />}
+            disabled={uploading}
+            sx={{ textTransform: 'none', borderRadius: '10px' }}
+          >
+            {uploading ? 'Mengunggah...' : 'Upload Foto'}
+            <input type="file" accept="image/*" hidden onChange={handleUploadFoto} />
+          </Button>
+        </Box>
       </Paper>
 
       <Paper sx={{ borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
@@ -164,10 +240,11 @@ export default function DetailAset() {
 
         <Box sx={{ p: 3 }}>
           {tab === 0 && (
-            <Typography variant="body2" sx={{ color: '#64748b' }}>Informasi lengkap aset ditampilkan di atas.</Typography>
+            <Typography variant="body2" sx={{ color: '#64748b' }}>
+              Informasi lengkap aset ditampilkan di atas.
+            </Typography>
           )}
 
-          {/* TAB MAINTENANCE */}
           {tab === 1 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
@@ -190,7 +267,6 @@ export default function DetailAset() {
             </Box>
           )}
 
-          {/* TAB MUTASI */}
           {tab === 2 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
@@ -212,7 +288,6 @@ export default function DetailAset() {
             </Box>
           )}
 
-          {/* TAB PENGADUAN */}
           {tab === 3 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
@@ -236,7 +311,6 @@ export default function DetailAset() {
         </Box>
       </Paper>
 
-      {/* DIALOG MAINTENANCE */}
       <Dialog open={openMaint} onClose={() => setOpenMaint(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ fontWeight: 'bold' }}>Tambah Maintenance</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
@@ -259,7 +333,6 @@ export default function DetailAset() {
         </DialogActions>
       </Dialog>
 
-      {/* DIALOG MUTASI */}
       <Dialog open={openMutasi} onClose={() => setOpenMutasi(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ fontWeight: 'bold' }}>Tambah Mutasi</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
@@ -274,7 +347,6 @@ export default function DetailAset() {
         </DialogActions>
       </Dialog>
 
-      {/* DIALOG PENGADUAN */}
       <Dialog open={openPengaduan} onClose={() => setOpenPengaduan(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ fontWeight: 'bold' }}>Tambah Pengaduan</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
